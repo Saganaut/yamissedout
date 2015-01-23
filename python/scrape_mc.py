@@ -52,20 +52,14 @@ def extract_subject_features(subject):
   location, new_subject  = get_location(subject)
   mc_data['location'] = location
   split_subject = new_subject.split(' - ')
-  mc_data['subject'] = split_subject[0]
-  if len(split_subject) == 1:
-    mc_data['mc_class'] = 'unknown'
-    mc_data['age'] = -1
-  elif len(split_subject) == 2:
-    mc_data['mc_class'] = split_subject[1].strip() if split_subject[1].strip() in mc_classes else "unknown" 
-    mc_data['age'] = -1
-  elif len(split_subject) == 3:
-    mc_data['mc_class'] = split_subject[1].strip() if split_subject[1].strip() in mc_classes else "unknown"   
-    mc_data['age'] = int(split_subject[2])
-  else:
-    print 'Error - subject line too long: ' + subject  
+
+  mc_data['age'], split_subject = get_age(split_subject)
+  print "---->" + str(split_subject)
+  mc_data['mc_class'], split_subject = get_class(split_subject)
+  print "-->" + split_subject
+  mc_data['subject'] = split_subject
   mc_data['gender'] = mc_data['mc_class'][0] if mc_data['mc_class'] != 'unknown' else 'unknown'
-  # print mc_data
+  print mc_data
   return mc_data
 
 def get_location(subj):
@@ -74,6 +68,20 @@ def get_location(subj):
     location = subj[subj.find("(")+1:subj.find(")")]
     subj = subj[:subj.find("(")] +  subj[subj.find(")")+1:]
     return location.replace("\"", "\'"), subj
+  else:
+    return 'unknown', subj
+
+def get_age(subj):
+  str_len = len(subj)
+  if subj[str_len - 1].isdigit():
+    return int(subj[str_len - 1]), subj[0:str_len-2]
+  else:
+    return -1, subj
+
+def get_class(subj):
+  str_len = len(subj)
+  if subj[str_len - 1].strip() in mc_classes:
+    return subj[str_len - 1].strip(), subj[0:str_len-2]
   else:
     return 'unknown', subj
 
@@ -89,9 +97,8 @@ def write_chunk_to_db(data, db_name='../db/missed_connections.db'):
   conn = sqlite3.connect(db_name)
   cursor = conn.cursor()
   for row in data:
-    # c.execute("INSERT INTO missed_connections VALUES ('2006-01-05','BUY','RHAT',100,35.14)")
-    
-    print("INSERT INTO missed_connections VALUES (\""+row["datetime"]+"\",\""+row["raw_subject"]+"\",\""+row["subject"]+"\",\""+row["body"]+"\",\""+row["url"]+"\",\""+row["mc_class"]+"\",\""+row["location"]+"\","+str(row["age"])+",\""+row["gender"]+"\")")
+    # c.execute("INSERT INTO missed_connections VALUES ('2006-01-05','BUY','RHAT',100,35.14)")   
+    print("INSERT INTO missed_connections  VALUES (\""+row["datetime"]+"\",\""+row["raw_subject"]+"\",\""+row["subject"]+"\",\""+row["body"]+"\",\""+row["url"]+"\",\""+row["mc_class"]+"\",\""+row["location"]+"\","+str(row["age"])+",\""+row["gender"]+"\")")
     cursor.execute("INSERT INTO missed_connections VALUES (\""+row["datetime"]+"\",\""+row["raw_subject"]+"\",\""+row["subject"]+"\",\""+row["body"]+"\",\""+row["url"]+"\",\""+row["mc_class"]+"\",\""+row["location"]+"\","+str(row["age"])+",\""+row["gender"]+"\")")
     conn.commit()
   conn.close()
