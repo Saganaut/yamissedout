@@ -54,10 +54,10 @@ def extract_subject_features(subject):
   split_subject = new_subject.split(' - ')
 
   mc_data['age'], split_subject = get_age(split_subject)
-  print "---->" + str(split_subject)
   mc_data['mc_class'], split_subject = get_class(split_subject)
-  print "-->" + split_subject
-  mc_data['subject'] = split_subject
+  mc_data['subject'] = ', '.join(split_subject[:])
+  print str(mc_data['subject'])
+  
   mc_data['gender'] = mc_data['mc_class'][0] if mc_data['mc_class'] != 'unknown' else 'unknown'
   print mc_data
   return mc_data
