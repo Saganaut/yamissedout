@@ -49,6 +49,7 @@ def extract_mc_features(url):
 
 def extract_subject_features(subject):
   mc_data = {}
+  #print subject
   location, new_subject  = get_location(subject)
   mc_data['location'] = location
   split_subject = new_subject.split(' - ')
@@ -56,7 +57,7 @@ def extract_subject_features(subject):
   mc_data['age'], split_subject = get_age(split_subject)
   mc_data['mc_class'], split_subject = get_class(split_subject)
   mc_data['subject'] = ', '.join(split_subject[:])
-  print str(mc_data['subject'])
+  #print str(mc_data['subject'])
   
   mc_data['gender'] = mc_data['mc_class'][0] if mc_data['mc_class'] != 'unknown' else 'unknown'
   print mc_data
@@ -65,9 +66,10 @@ def extract_subject_features(subject):
 def get_location(subj):
   """ Extract the location from the subject line. May do more sophisticated guessing later. """
   if '(' in subj:
-    location = subj[subj.find("(")+1:subj.find(")")]
-    subj = subj[:subj.find("(")] +  subj[subj.find(")")+1:]
-    return location.replace("\"", "\'"), subj
+    if subj.endswith(')'):
+      location = subj[subj.rfind("(")+1:subj.rfind(")")]
+      subj = subj[:subj.rfind("(")] +  subj[subj.rfind(")")+1:]
+      return location.replace("\"", "\'"), subj
   else:
     return 'unknown', subj
 
