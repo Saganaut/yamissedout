@@ -1,6 +1,7 @@
 import sqlite3
 import os.path
 import sys
+import urllib
 
 import requests
 
@@ -12,11 +13,12 @@ from urlparse import urljoin
 BASE_URL = 'http://atlanta.craigslist.org/search/mis'
 num_pages = 1
 
+do_extract_pics = 0
+
 #viable classes 
 mc_classes = set(['w4m', 'm4m', 'm4w', 'w4w', 't4m', 'm4t', 't4w', 'w4t', 't4t', 'mw4mw', 'mw4w', 'mw4m', 'w4mw', 'm4mw', 'w4ww', 'm4mm', 'mm4m', 'ww4w', 'ww4m', 'mm4w', 'm4ww', 'w4mm', 't4mw', 'mw4t'])
 
 def scrape_mc():
-  
   for i in range(num_pages):
     mc_data = []
     print "---Processing Page " + str(i)
@@ -31,34 +33,50 @@ def scrape_mc():
       c+=1
       link = missed_connection.find('a').attrs['href']
       url = urljoin(BASE_URL, link)
-      mc_data.append(extract_mc_features(url))
+
+      features = extract_mc_features(url)
+      if features:
+        mc_data.append(features)
+        if (do_extract_pics == 1):
+          extract_pics(url)
       # break
     print "---Writing Page " + str(i) + " to Db"
     write_chunk_to_db(mc_data)
     
+def extract_pics(url):
+  response = requests.get(url)
+  soup = BeautifulSoup(response.content)
+  imgs = soup.findAll("div", {"class":"slide first visible"})
+  for img in imgs: 
+    imgUrl = img.find('img')['src']
+    print "---Scraping " + str(imgUrl)
+    urllib.urlretrieve(imgUrl, 'pics/' + os.path.basename(imgUrl))
 
 def extract_mc_features(url):
   response = requests.get(url)
   soup = BeautifulSoup(response.content)
-  mc_data = extract_subject_features(soup.find('h2', {'class':'postingtitle'}).text.strip())
-  mc_data['datetime'] = soup.find('time').attrs['datetime']
-  mc_data['raw_subject'] = soup.find('h2', {'class':'postingtitle'}).text.strip().replace("\"", "\'")
-  mc_data['body'] = soup.find('section', {'id':'postingbody'}).text.strip().replace("\"", "\'")
-  mc_data['url'] = url
-  return mc_data
+  post_title = soup.find('h2', {'class':'postingtitle'})
+  if post_title:
+    mc_data = extract_subject_features(post_title.text.strip())
+    mc_data['datetime'] = soup.find('time').attrs['datetime']
+    mc_data['raw_subject'] = soup.find('h2', {'class':'postingtitle'}).text.strip().replace("\"", "\'")
+    mc_data['body'] = soup.find('section', {'id':'postingbody'}).text.strip().replace("\"", "\'")
+    mc_data['url'] = url
+    return mc_data
+  else:
+    print "Skipping over deleted post..."
+    return post_title
+
 
 def extract_subject_features(subject):
   mc_data = {}
-  print subject
   location, new_subject  = get_location(subject)
   mc_data['location'] = location
   split_subject = new_subject.split(' - ')
   mc_data['age'], split_subject = get_age(split_subject)
   mc_data['mc_class'], split_subject = get_class(split_subject)
-  mc_data['subject'] = ', '.join(split_subject[:])
-  
+  mc_data['subject'] = ','.join(split_subject[:])
   mc_data['gender'] = mc_data['mc_class'][0] if mc_data['mc_class'] != 'unknown' else 'unknown'
-  print mc_data
   return mc_data
 
 def get_location(subj):
@@ -100,7 +118,7 @@ def write_chunk_to_db(data, db_name='../db/missed_connections.db'):
   cursor = conn.cursor()
   for row in data:
     # c.execute("INSERT INTO missed_connections VALUES ('2006-01-05','BUY','RHAT',100,35.14)")   
-    print("INSERT INTO missed_connections  VALUES (\""+row["datetime"]+"\",\""+row["raw_subject"]+"\",\""+row["subject"]+"\",\""+row["body"]+"\",\""+row["url"]+"\",\""+row["mc_class"]+"\",\""+row["location"]+"\","+str(row["age"])+",\""+row["gender"]+"\")")
+    #print("INSERT INTO missed_connections  VALUES (\""+row["datetime"]+"\",\""+row["raw_subject"]+"\",\""+row["subject"]+"\",\""+row["body"]+"\",\""+row["url"]+"\",\""+row["mc_class"]+"\",\""+row["location"]+"\","+str(row["age"])+",\""+row["gender"]+"\")")
     cursor.execute("INSERT INTO missed_connections VALUES (\""+row["datetime"]+"\",\""+row["raw_subject"]+"\",\""+row["subject"]+"\",\""+row["body"]+"\",\""+row["url"]+"\",\""+row["mc_class"]+"\",\""+row["location"]+"\","+str(row["age"])+",\""+row["gender"]+"\")")
     conn.commit()
   conn.close()
