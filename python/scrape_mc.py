@@ -68,6 +68,8 @@ def get_location(subj):
       location = subj[subj.rfind("(")+1:subj.rfind(")")]
       subj = subj[:subj.rfind("(")] +  subj[subj.rfind(")")+1:]
       return location.replace("\"", "\'"), subj.strip()
+    else:
+      return 'unknown', subj
   else:
     return 'unknown', subj
 
