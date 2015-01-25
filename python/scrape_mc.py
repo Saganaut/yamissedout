@@ -49,15 +49,13 @@ def extract_mc_features(url):
 
 def extract_subject_features(subject):
   mc_data = {}
-  #print subject
+  print subject
   location, new_subject  = get_location(subject)
   mc_data['location'] = location
   split_subject = new_subject.split(' - ')
-
   mc_data['age'], split_subject = get_age(split_subject)
   mc_data['mc_class'], split_subject = get_class(split_subject)
   mc_data['subject'] = ', '.join(split_subject[:])
-  #print str(mc_data['subject'])
   
   mc_data['gender'] = mc_data['mc_class'][0] if mc_data['mc_class'] != 'unknown' else 'unknown'
   print mc_data
@@ -69,21 +67,21 @@ def get_location(subj):
     if subj.endswith(')'):
       location = subj[subj.rfind("(")+1:subj.rfind(")")]
       subj = subj[:subj.rfind("(")] +  subj[subj.rfind(")")+1:]
-      return location.replace("\"", "\'"), subj
+      return location.replace("\"", "\'"), subj.strip()
   else:
     return 'unknown', subj
 
 def get_age(subj):
   str_len = len(subj)
   if subj[str_len - 1].isdigit():
-    return int(subj[str_len - 1]), subj[0:str_len-2]
+    return int(subj[str_len - 1]), subj[0:str_len-1]
   else:
     return -1, subj
 
 def get_class(subj):
   str_len = len(subj)
   if subj[str_len - 1].strip() in mc_classes:
-    return subj[str_len - 1].strip(), subj[0:str_len-2]
+    return subj[str_len - 1].strip(), subj[0:str_len-1]
   else:
     return 'unknown', subj
 
