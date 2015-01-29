@@ -2,6 +2,7 @@ import sqlite3
 import os.path
 import sys
 import urllib
+from optparse import OptionParser
 
 import requests
 
@@ -11,14 +12,13 @@ from urlparse import urljoin
 
 # The base url for craigslist in New York
 BASE_URL = 'http://atlanta.craigslist.org/search/mis'
-num_pages = 1
 
 do_extract_pics = 0
 
-#viable classes 
+#viable classes
 mc_classes = set(['w4m', 'm4m', 'm4w', 'w4w', 't4m', 'm4t', 't4w', 'w4t', 't4t', 'mw4mw', 'mw4w', 'mw4m', 'w4mw', 'm4mw', 'w4ww', 'm4mm', 'mm4m', 'ww4w', 'ww4m', 'mm4w', 'm4ww', 'w4mm', 't4mw', 'mw4t'])
 
-def scrape_mc():
+def scrape_mc(num_pages=1):
   for i in range(num_pages):
     mc_data = []
     print "---Processing Page " + str(i)
@@ -42,12 +42,12 @@ def scrape_mc():
       # break
     print "---Writing Page " + str(i) + " to Db"
     write_chunk_to_db(mc_data)
-    
+
 def extract_pics(url):
   response = requests.get(url)
   soup = BeautifulSoup(response.content)
   imgs = soup.findAll("div", {"class":"slide first visible"})
-  for img in imgs: 
+  for img in imgs:
     imgUrl = img.find('img')['src']
     print "---Scraping " + str(imgUrl)
     urllib.urlretrieve(imgUrl, 'pics/' + os.path.basename(imgUrl))
@@ -112,24 +112,38 @@ def write_database(db_name):
   conn.commit()
   conn.close()
 
-  
+
 def write_chunk_to_db(data, db_name='../db/missed_connections.db'):
   conn = sqlite3.connect(db_name)
   cursor = conn.cursor()
   for row in data:
-    # c.execute("INSERT INTO missed_connections VALUES ('2006-01-05','BUY','RHAT',100,35.14)")   
+    # c.execute("INSERT INTO missed_connections VALUES ('2006-01-05','BUY','RHAT',100,35.14)")
     #print("INSERT INTO missed_connections  VALUES (\""+row["datetime"]+"\",\""+row["raw_subject"]+"\",\""+row["subject"]+"\",\""+row["body"]+"\",\""+row["url"]+"\",\""+row["mc_class"]+"\",\""+row["location"]+"\","+str(row["age"])+",\""+row["gender"]+"\")")
     cursor.execute("INSERT INTO missed_connections VALUES (\""+row["datetime"]+"\",\""+row["raw_subject"]+"\",\""+row["subject"]+"\",\""+row["body"]+"\",\""+row["url"]+"\",\""+row["mc_class"]+"\",\""+row["location"]+"\","+str(row["age"])+",\""+row["gender"]+"\")")
     conn.commit()
   conn.close()
 
-if __name__ == '__main__':
-  if not os.path.isfile('../db/missed_connections.db'): 
+def main():
+  """main function for standalone usage"""
+  usage = "usage: %prog [options] input"
+  parser = OptionParser(usage=usage)
+  parser.add_option('-n', '--num-pages', default=1, type='int',
+                    help='Number of pages to parse BITCH [default: %default]')
+
+  (options, args) = parser.parse_args()
+
+  if len(args) != 0:
+    parser.print_help()
+    return 2
+
+  # do stuff
+
+  if not os.path.isfile('../db/missed_connections.db'):
     write_database('../db/missed_connections.db')
-  scrape_mc()
+  scrape_mc(num_pages=options.num_pages)
 
-
-
+if __name__ == '__main__':
+    sys.exit(main())
 
 
 
