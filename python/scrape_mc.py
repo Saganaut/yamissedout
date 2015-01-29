@@ -117,9 +117,7 @@ def write_chunk_to_db(data, db_name='../db/missed_connections.db'):
   conn = sqlite3.connect(db_name)
   cursor = conn.cursor()
   for row in data:
-    # c.execute("INSERT INTO missed_connections VALUES ('2006-01-05','BUY','RHAT',100,35.14)")
-    #print("INSERT INTO missed_connections  VALUES (\""+row["datetime"]+"\",\""+row["raw_subject"]+"\",\""+row["subject"]+"\",\""+row["body"]+"\",\""+row["url"]+"\",\""+row["mc_class"]+"\",\""+row["location"]+"\","+str(row["age"])+",\""+row["gender"]+"\")")
-    cursor.execute("INSERT INTO missed_connections VALUES (\""+row["datetime"]+"\",\""+row["raw_subject"]+"\",\""+row["subject"]+"\",\""+row["body"]+"\",\""+row["url"]+"\",\""+row["mc_class"]+"\",\""+row["location"]+"\","+str(row["age"])+",\""+row["gender"]+"\")")
+    cursor.execute("INSERT INTO missed_connections VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", (row["datetime"], row["raw_subject"], row["subject"], row["body"], row["url"], row["mc_class"], row["location"], str(row["age"]), row["gender"]))
     conn.commit()
   conn.close()
 
