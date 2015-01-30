@@ -21,6 +21,7 @@ def read_from_db(db_name, num_grams=3, maxrecords=800):
     body = cursor.fetchone()
 
   conn.close()
+  # entity_extraction(line)
 
   tokens = line.split()
   bigram_measures = nltk.collocations.BigramAssocMeasures()
@@ -31,6 +32,16 @@ def read_from_db(db_name, num_grams=3, maxrecords=800):
   fdist = nltk.FreqDist(bgs)
   return fdist.most_common(maxrecords)
 
+def entity_extraction(document):
+  sentences = nltk.sent_tokenize(document)
+  sentences = [nltk.word_tokenize(sent) for sent in sentences]
+  sentences = [nltk.pos_tag(sent) for sent in sentences]
+  grammar = "NP: {<DT>?<JJ>*<NN>}"
+  cp = nltk.RegexpParser(grammar)
+  result = cp.parse(sentences[0])
+  print(result)
+  exit()
+
 db_path = '../db/missed_connections.db'
 if __name__ == '__main__':
   if not os.path.isfile(db_path): 
@@ -38,3 +49,5 @@ if __name__ == '__main__':
 
   for k,v in read_from_db(db_path):
     print ' '.join([str(i) for i in k]), v
+
+
