@@ -10,15 +10,18 @@ from bs4 import BeautifulSoup
 from pprint import pprint
 from urlparse import urljoin
 
-# The base url for craigslist in New York
-BASE_URL = 'http://atlanta.craigslist.org/search/mis'
 
-do_extract_pics = 1
+
+do_extract_pics = 0
 
 #viable classes
 mc_classes = set(['w4m', 'm4m', 'm4w', 'w4w', 't4m', 'm4t', 't4w', 'w4t', 't4t', 'mw4mw', 'mw4w', 'mw4m', 'w4mw', 'm4mw', 'w4ww', 'm4mm', 'mm4m', 'ww4w', 'ww4m', 'mm4w', 'm4ww', 'w4mm', 't4mw', 'mw4t'])
 
 def scrape_mc(num_pages=1):
+  # Automate a loop late
+  city = 'atlanta'
+  # The base url for craigslist in New York
+  BASE_URL = 'http://'+city+'.craigslist.org/search/mis'
   for i in range(num_pages):
     mc_data = []
     print "---Processing Page " + str(i)
@@ -34,7 +37,7 @@ def scrape_mc(num_pages=1):
       link = missed_connection.find('a').attrs['href']
       url = urljoin(BASE_URL, link)
 
-      features = extract_mc_features(url)
+      features = extract_mc_features(url, city)
       if features:
         mc_data.append(features)
         if (do_extract_pics == 1):
@@ -42,6 +45,7 @@ def scrape_mc(num_pages=1):
       # break
     print "---Writing Page " + str(i) + " to Db"
     write_chunk_to_db(mc_data)
+
 
 def extract_pics(url):
   response = requests.get(url)
@@ -56,7 +60,7 @@ def extract_pics(url):
       print "--- " + str(imgUrl) + " already exists"
 
 
-def extract_mc_features(url):
+def extract_mc_features(url, city=""):
   response = requests.get(url)
   soup = BeautifulSoup(response.content)
   post_title = soup.find('h2', {'class':'postingtitle'})
@@ -66,6 +70,7 @@ def extract_mc_features(url):
     mc_data['raw_subject'] = soup.find('h2', {'class':'postingtitle'}).text.strip().replace("\"", "\'")
     mc_data['body'] = soup.find('section', {'id':'postingbody'}).text.strip().replace("\"", "\'")
     mc_data['url'] = url
+    mc_data['city'] = city
     return mc_data
   else:
     print "Skipping over deleted post..."
@@ -112,7 +117,7 @@ def get_class(subj):
 def write_database(db_name):
   conn = sqlite3.connect(db_name)
   cursor = conn.cursor()
-  cursor.execute("""CREATE TABLE missed_connections (datetime text, raw_subject text, subject text, body text, url text, mc_class text, location text, age real, gender text)""")
+  cursor.execute("""CREATE TABLE missed_connections (datetime text, raw_subject text, subject text, body text, url text, mc_class text, location text, age real, gender text, city text)""")
   conn.commit()
   conn.close()
 
@@ -121,7 +126,11 @@ def write_chunk_to_db(data, db_name='../db/missed_connections.db'):
   conn = sqlite3.connect(db_name)
   cursor = conn.cursor()
   for row in data:
-    cursor.execute("INSERT INTO missed_connections VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", (row["datetime"], row["raw_subject"], row["subject"], row["body"], row["url"], row["mc_class"], row["location"], str(row["age"]), row["gender"]))
+    cursor.execute("""SELECT subject FROM missed_connections WHERE url = \'%s\' LIMIT 1""" % row["url"])
+    if cursor.fetchone() != None:
+      print "---Results already in DB, terminating."
+      break; 
+    cursor.execute("INSERT INTO missed_connections VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (row["datetime"], row["raw_subject"], row["subject"], row["body"], row["url"], row["mc_class"], row["location"], str(row["age"]), row["gender"], row["city"]))
     conn.commit()
   conn.close()
 
@@ -141,6 +150,7 @@ def main():
   # do stuff
 
   if not os.path.isfile('../db/missed_connections.db'):
+    print "---Constructing Database " 
     write_database('../db/missed_connections.db')
   scrape_mc(num_pages=options.num_pages)
 
