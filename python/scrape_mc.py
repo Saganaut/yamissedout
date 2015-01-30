@@ -17,8 +17,8 @@ do_extract_pics = 0
 #viable classes
 mc_classes = set(['w4m', 'm4m', 'm4w', 'w4w', 't4m', 'm4t', 't4w', 'w4t', 't4t', 'mw4mw', 'mw4w', 'mw4m', 'w4mw', 'm4mw', 'w4ww', 'm4mm', 'mm4m', 'ww4w', 'ww4m', 'mm4w', 'm4ww', 'w4mm', 't4mw', 'mw4t'])
 
-def scrape_mc(num_pages=1):
-  # Automate a loop late
+def scrape_mc(num_pages=1, do_extract_pics=0):
+  # Automate a loop later
   city = 'atlanta'
   # The base url for craigslist in New York
   BASE_URL = 'http://'+city+'.craigslist.org/search/mis'
@@ -140,10 +140,12 @@ def main():
   parser = OptionParser(usage=usage)
   parser.add_option('-n', '--num-pages', default=1, type='int',
                     help='Number of pages to parse BITCH [default: %default]')
+  parser.add_option('-e', '--extract-pics', default=0, type='int',
+                    help='Do you want to download dickpics BITCH [default: %default]')
 
   (options, args) = parser.parse_args()
 
-  if len(args) != 0:
+  if (len(args) != 0) or (options.num_pages <= 0) or (options.extract_pics not in (0,1)) :
     parser.print_help()
     return 2
 
@@ -152,7 +154,7 @@ def main():
   if not os.path.isfile('../db/missed_connections.db'):
     print "---Constructing Database " 
     write_database('../db/missed_connections.db')
-  scrape_mc(num_pages=options.num_pages)
+  scrape_mc(num_pages=options.num_pages, do_extract_pics=options.extract_pics)
 
 if __name__ == '__main__':
     sys.exit(main())
