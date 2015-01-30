@@ -5,7 +5,7 @@ import re
 import nltk
 from nltk.collocations import *
 
-def read_from_db(db_name):
+def read_from_db(db_name, num_grams=3, maxrecords=800):
   conn = sqlite3.connect(db_name)
   cursor = conn.cursor()
   cursor.execute("SELECT body FROM missed_connections")
@@ -26,24 +26,15 @@ def read_from_db(db_name):
   bigram_measures = nltk.collocations.BigramAssocMeasures()
   finder = BigramCollocationFinder.from_words(tokens)
   finder.apply_freq_filter(3)
-  #print finder.ngram_fd.viewitems()
-  #print finder.nbest(bigram_measures.pmi, 100)
 
-  num_grams = 3
   bgs = nltk.ngrams(tokens,num_grams)
   fdist = nltk.FreqDist(bgs)
-  for k,v in fdist.most_common(800):
-    print ' '.join([str(i) for i in k]), v
-
-  #text = nltk.Text(tokens)
-  #print text.generate(3)
-
-
+  return fdist.most_common(maxrecords)
 
 db_path = '../db/missed_connections.db'
 if __name__ == '__main__':
   if not os.path.isfile(db_path): 
     print "No missed connections database at " + db_path + "... Run scrape_mc.py first."
-    sys.exit()
 
-  read_from_db(db_path)
+  for k,v in read_from_db(db_path):
+    print ' '.join([str(i) for i in k]), v
