@@ -49,8 +49,12 @@ def extract_pics(url):
   imgs = soup.findAll("div", {"class":"slide first visible"})
   for img in imgs:
     imgUrl = img.find('img')['src']
-    print "---Scraping " + str(imgUrl)
-    urllib.urlretrieve(imgUrl, 'pics/' + os.path.basename(imgUrl))
+    if not os.path.isfile('pics/' + os.path.basename(imgUrl)):
+      print "---Scraping " + str(imgUrl)
+      urllib.urlretrieve(imgUrl, 'pics/' + os.path.basename(imgUrl))
+    else:
+      print "--- " + str(imgUrl) + " already exists"
+
 
 def extract_mc_features(url):
   response = requests.get(url)
