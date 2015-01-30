@@ -20,6 +20,8 @@ def read_from_db(db_name):
     line += stmt                        #this will crash on a large database but ok for now
     body = cursor.fetchone()
 
+  conn.close()
+
   tokens = line.split()
   bigram_measures = nltk.collocations.BigramAssocMeasures()
   finder = BigramCollocationFinder.from_words(tokens)
@@ -33,7 +35,8 @@ def read_from_db(db_name):
   for k,v in fdist.most_common(800):
     print ' '.join([str(i) for i in k]), v
 
-  conn.close()
+  #text = nltk.Text(tokens)
+  #print text.generate(3)
 
 
 
