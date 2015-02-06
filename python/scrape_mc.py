@@ -6,6 +6,8 @@ from optparse import OptionParser
 
 import requests
 
+import common
+
 from bs4 import BeautifulSoup
 from pprint import pprint
 from urlparse import urljoin
@@ -156,8 +158,16 @@ def main():
     parser.print_help()
     return 2
 
+  for city in options.cities.split(', '):
+    city = city.strip()
+    if city not in common.valid_cities() :
+      print "City " + city + " is not valid. Choose from:" 
+      print '\n'.join(common.valid_cities())
+      return 2
+
   if options.cities.lower() == 'all':
-    cities = ["atlanta", "austin", "boston", "chicago", "dallas", "denver", "detroit", "houston", "lasvegas", "losangeles", "miami", "minneapolis", "newyork", "orangecounty", "philadelphia", "phoenix", "portland", "raleigh", "sacramento", "sandiego", "seattle", "sfbay", "washingtondc"]
+    cities = common.valid_cities()
+
   else:
     cities = options.cities.split(',')
 

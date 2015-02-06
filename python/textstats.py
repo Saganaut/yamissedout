@@ -3,7 +3,6 @@ import os
 import sqlite3
 import re
 import nltk
-import pprint
 from optparse import OptionParser
 from nltk.collocations import *
 from nltk.corpus import stopwords
@@ -15,10 +14,14 @@ from nltk.corpus import stopwords
 # * make clouds unique to cities by removing high freq ones in the general
 # dataset
 
-def read_from_db(db_name, num_grams=3, maxrecords=40):
+def read_from_db(db_name, num_grams=3, maxrecords=40, source_city='atlanta'):
   conn = sqlite3.connect(db_name)
   cursor = conn.cursor()
-  cursor.execute("SELECT body FROM missed_connections")
+
+  source_city = source_city.lower()
+  select_stmt = 'SELECT body FROM missed_connections WHERE city = ?'
+  cursor.execute(select_stmt, (source_city,))
+
   num = 0
   lines = []
   regex = re.compile('[^a-zA-Z \']')    #all symbols that will be retained
@@ -42,15 +45,13 @@ def read_from_db(db_name, num_grams=3, maxrecords=40):
 
   tokens_nostop = [tkn for tkn in tokens if not (len(tkn) < 3 or tkn in ignored_words)]
 
-  pp = pprint.PrettyPrinter(indent=4)
-
   cf_bi = nltk.BigramCollocationFinder.from_words(tokens)
   cf_bi.apply_freq_filter(3)
   cf_bi.apply_word_filter(word_filter)
   bi_scorer = nltk.BigramAssocMeasures.likelihood_ratio
   print('Top bi-grams by likelihood, excluding stop-words:')
   best_list = [str(' '.join(tup)) for tup in cf_bi.nbest(bi_scorer, 20)]
-  pp.pprint(best_list)
+  print('\n'.join(best_list))
   print('\n')
 
   cf_tri = nltk.TrigramCollocationFinder.from_words(tokens)
@@ -59,7 +60,7 @@ def read_from_db(db_name, num_grams=3, maxrecords=40):
   tri_scorer = nltk.TrigramAssocMeasures.likelihood_ratio
   print('Top tri-grams by likelihood, excluding stop-words:')
   best_list = [str(' '.join(tup)) for tup in cf_tri.nbest(tri_scorer, 20)]
-  pp.pprint(best_list)
+  print('\n'.join(best_list))
   print('\n')
 
   bgs = nltk.ngrams(tokens_nostop,num_grams)
@@ -93,6 +94,8 @@ def main():
                     help='Number of grams for the n-gram BITCH [default: %default]')
   parser.add_option('-m', '--max-records', default=40, type='int',
                     help='Max number of records to parse from the db BITCH [default: %default]')
+  parser.add_option('-c', '--city', default='atlanta', type='string',
+                    help='Source city [default: %default]')
 
   (options, args) = parser.parse_args()
   if (len(args) != 0) or (options.num_grams <= 1) or (options.max_records < 1) :
@@ -103,7 +106,7 @@ def main():
   if not os.path.isfile(db_path): 
     print "No missed connections database at " + db_path + "... Run scrape_mc.py first."
   else: 
-    read_from_db(db_name=options.db_name, num_grams=options.num_grams, maxrecords=options.max_records)
+    read_from_db(db_name=options.db_name, num_grams=options.num_grams, maxrecords=options.max_records, source_city=options.city)
 
 
 if __name__ == '__main__':
