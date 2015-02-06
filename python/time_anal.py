@@ -41,7 +41,7 @@ def time_analysis(db_name, gender='m'):
     spamwriter.writerow(["time","frequency","count"])
     sorted_keys = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     for k in sorted_keys:
-      spamwriter.writerow([k, date_appearances[k]/float(n_peepz), time_appearances[k]])
+      spamwriter.writerow([k, date_appearances[k]/float(n_peepz), date_appearances[k]])
 
 
 
