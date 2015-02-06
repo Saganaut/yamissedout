@@ -15,6 +15,7 @@ def time_analysis(db_name, gender='m'):
   cursor = conn.cursor()
   cursor.execute("SELECT datetime FROM missed_connections WHERE gender = \'"+gender+"\'")  
   rows = cursor.fetchall()
+  n_peepz = len(rows)
   dates = []
   time_appearances = defaultdict(int)
   date_appearances = defaultdict(int)
@@ -33,14 +34,14 @@ def time_analysis(db_name, gender='m'):
     spamwriter.writerow(["time","frequency"])
     sorted_keys = sorted(time_appearances.keys())
     for k in sorted_keys:
-      spamwriter.writerow([k, time_appearances[k]])
+      spamwriter.writerow([k, time_appearances[k]/float(n_peepz)])
 
   with open('../web/web_data/'+gender_str[gender]+'_days.tsv', 'wb') as csvfile:
     spamwriter = csv.writer(csvfile, delimiter='\t',quotechar='|', quoting=csv.QUOTE_MINIMAL)
     spamwriter.writerow(["time","frequency"])
     sorted_keys = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     for k in sorted_keys:
-      spamwriter.writerow([k, date_appearances[k]])
+      spamwriter.writerow([k, date_appearances[k]/float(n_peepz)])
 
 
 
