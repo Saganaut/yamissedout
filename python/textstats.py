@@ -11,19 +11,20 @@ def read_from_db(db_name, num_grams=3, maxrecords=40):
   cursor = conn.cursor()
   cursor.execute("SELECT body FROM missed_connections")
   num = 0
-  line = ""
+  lines = []
   regex = re.compile('[^a-zA-Z \']')
   body = cursor.fetchone()
   while body:
     stmt = body[0].strip()
     stmt = stmt.lower()                 #convert all words to lower-case
     stmt = regex.sub(' ', stmt)          #remove symbols
-    line += stmt                        #this will crash on a large database but ok for now
+    lines.append(stmt)             
     body = cursor.fetchone()
 
   conn.close()
+  
+  line = ''.join(lines)
   #entity_extraction(line)
-
   tokens = line.split()
   bigram_measures = nltk.collocations.BigramAssocMeasures()
   finder = BigramCollocationFinder.from_words(tokens)
