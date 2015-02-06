@@ -61,6 +61,8 @@ def read_from_db(db_name, num_grams=3, maxrecords=40):
   for k,v in ngram_rank:
     print '\t', ' '.join([str(i) for i in k]), v
 
+  return ngram_rank
+
 def entity_extraction(document):
   #if this crashes run 'python -m nltk.downloader all'
   sentences = nltk.sent_tokenize(document)
