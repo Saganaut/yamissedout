@@ -13,9 +13,9 @@ body {
   shape-rendering: crispEdges;
 }
 
-.bar {
+/*.bar {
   fill: orange;
-}
+}*/
 
 .bar:hover {
   fill: orangered ;
@@ -60,8 +60,8 @@ body {
 <script>
 
 var margin = {top: 40, right: 20, bottom: 30, left: 40},
-    width = 960 - margin.left - margin.right,
-    height = 500 - margin.top - margin.bottom;
+    width = 560 - margin.left - margin.right,
+    height = 300 - margin.top - margin.bottom;
 
 // var formatPercent = d3.format(".0%");
 
@@ -87,53 +87,63 @@ var tip = d3.tip()
     return "<strong>Frequency:</strong> <span style='color:red'>" + d.frequency + "</span>";
   })
 
-var svg = d3.select("body").append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-  .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+function barchart(filename, xlabel, color){
+  var svg = d3.select("body").append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-svg.call(tip);
+  svg.call(tip);
 
-d3.tsv("web_data/male_time.tsv", type, function(error, data) {
-  x.domain(data.map(function(d) { return d.time; }));
-  y.domain([0, d3.max(data, function(d) { return d.frequency; })]);
+  d3.tsv(filename, type, function(error, data) {
+    x.domain(data.map(function(d) { return d.time; }));
+    y.domain([0, d3.max(data, function(d) { return d.frequency; })]);
 
-  svg.append("g")
-      .attr("class", "x axis")
-      .attr("transform", "translate(0," + height + ")")
-      .call(xAxis)
+    svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis)
+        .append("text")
+        .attr("y", 28)
+        .attr("x", width/2)
+        .text(xlabel);
+
+    svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis)
       .append("text")
-      .attr("y", 28)
-      .attr("x", width/2)
-      .text("Time of Day");
+        .attr("transform", "rotate(-90)")
+        .attr("y", 6)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("# Missed Connections");
 
-  svg.append("g")
-      .attr("class", "y axis")
-      .call(yAxis)
-    .append("text")
-      .attr("transform", "rotate(-90)")
-      .attr("y", 6)
-      .attr("dy", ".71em")
-      .style("text-anchor", "end")
-      .text("# Missed Connections");
+    svg.selectAll(".bar")
+        .data(data)
+      .enter().append("rect")
+        .attr("class", "bar")
+        .attr("fill", color)
+        .attr("x", function(d) { return x(d.time); })
+        .attr("width", x.rangeBand())
+        .attr("y", function(d) { return y(d.frequency); })
+        .attr("height", function(d) { return height - y(d.frequency); })
+        .on('mouseover', tip.show)
+        .on('mouseout', tip.hide)
 
-  svg.selectAll(".bar")
-      .data(data)
-    .enter().append("rect")
-      .attr("class", "bar")
-      .attr("x", function(d) { return x(d.time); })
-      .attr("width", x.rangeBand())
-      .attr("y", function(d) { return y(d.frequency); })
-      .attr("height", function(d) { return height - y(d.frequency); })
-      .on('mouseover', tip.show)
-      .on('mouseout', tip.hide)
-
-});
+  });
+}
 
 function type(d) {
   d.frequency = +d.frequency;
   return d;
 }
+
+barchart("web_data/male_time.tsv", "Time of Day", "orange");
+barchart("web_data/male_days.tsv", "Day of the Week", "orange");
+barchart("web_data/female_time.tsv", "Time of Day", "blue");
+barchart("web_data/female_days.tsv", "Day of the Week", "blue");
+barchart("web_data/trans_time.tsv", "Time of Day", "#800020");
+barchart("web_data/trans_days.tsv", "Day of the Week", "#800020");
 
 </script>
