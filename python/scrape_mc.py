@@ -17,7 +17,7 @@ do_extract_pics = 0
 #viable classes
 mc_classes = set(['w4m', 'm4m', 'm4w', 'w4w', 't4m', 'm4t', 't4w', 'w4t', 't4t', 'mw4mw', 'mw4w', 'mw4m', 'w4mw', 'm4mw', 'w4ww', 'm4mm', 'mm4m', 'ww4w', 'ww4m', 'mm4w', 'm4ww', 'w4mm', 't4mw', 'mw4t'])
 
-def scrape_mc(cities, num_pages=1, do_extract_pics=0):
+def scrape_mc(cities, db_name, num_pages=1, do_extract_pics=0):
   # Automate a loop later
   for city in cities:
     # The base url for craigslist in New York
@@ -44,7 +44,7 @@ def scrape_mc(cities, num_pages=1, do_extract_pics=0):
             extract_pics(url)
       # break
       print "---Writing Page " + str(i) + " to Db"
-      write_chunk_to_db(mc_data)
+      write_chunk_to_db(mc_data, db_name)
 
 def extract_pics(url):
   response = requests.get(url)
@@ -121,7 +121,7 @@ def write_database(db_name):
   conn.close()
 
 
-def write_chunk_to_db(data, db_name='../db/missed_connections.db'):
+def write_chunk_to_db(data, db_name):
   conn = sqlite3.connect(db_name)
   cursor = conn.cursor()
   for row in data:
@@ -143,6 +143,8 @@ def main():
                     help='Do you want to download dickpics BITCH [default: %default]')
   parser.add_option('-c', '--cities', default='atlanta',
                     help='Comma-separated list of cities to parse [default: %default]')
+  parser.add_option('-d', '--db', default='../db/missed_connections.db',
+                    help='DB path [default: %default]')
 
   (options, args) = parser.parse_args()
 
@@ -157,10 +159,10 @@ def main():
 
   # do stuff
 
-  if not os.path.isfile('../db/missed_connections.db'):
+  if not os.path.isfile(options.db):
     print "---Constructing Database " 
-    write_database('../db/missed_connections.db')
-  scrape_mc(cities, num_pages=options.num_pages, do_extract_pics=options.extract_pics)
+    write_database(options.db)
+  scrape_mc(cities, options.db, num_pages=options.num_pages, do_extract_pics=options.extract_pics)
 
 if __name__ == '__main__':
     sys.exit(main())
