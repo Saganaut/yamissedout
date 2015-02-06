@@ -46,10 +46,14 @@ def scrape_mc(cities, db_name, num_pages=1, do_extract_pics=0):
       print "---Writing Page " + str(i) + " to Db"
       write_chunk_to_db(mc_data, db_name)
 
-def extract_pics(url):
+def extract_pics(url, pdir='pics/'):
   response = requests.get(url)
   soup = BeautifulSoup(response.content)
   imgs = soup.findAll("div", {"class":"slide first visible"})
+  try:
+    os.mkdir(pdir)
+  except:
+    pass
   for img in imgs:
     imgUrl = img.find('img')['src']
     if not os.path.isfile('pics/' + os.path.basename(imgUrl)):
@@ -139,8 +143,8 @@ def main():
   parser = OptionParser(usage=usage)
   parser.add_option('-n', '--num-pages', default=1, type='int',
                     help='Number of pages to parse BITCH [default: %default]')
-  parser.add_option('-e', '--extract-pics', default=0, type='int',
-                    help='Do you want to download dickpics BITCH [default: %default]')
+  parser.add_option('-e', '--extract-pics', default=False, action='store_true',
+                    help='Do you want to download dickpics BITCH')
   parser.add_option('-c', '--cities', default='atlanta',
                     help='Comma-separated list of cities to parse [default: %default]')
   parser.add_option('-d', '--db', default='../db/missed_connections.db',
