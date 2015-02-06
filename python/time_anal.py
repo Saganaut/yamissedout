@@ -31,17 +31,17 @@ def time_analysis(db_name, gender='m'):
 
   with open('../web/web_data/'+gender_str[gender]+'_time.tsv', 'wb') as csvfile:
     spamwriter = csv.writer(csvfile, delimiter='\t',quotechar='|', quoting=csv.QUOTE_MINIMAL)
-    spamwriter.writerow(["time","frequency"])
+    spamwriter.writerow(["time","frequency","count"])
     sorted_keys = sorted(time_appearances.keys())
     for k in sorted_keys:
-      spamwriter.writerow([k, time_appearances[k]/float(n_peepz)])
+      spamwriter.writerow([k, time_appearances[k]/float(n_peepz), time_appearances[k]])
 
   with open('../web/web_data/'+gender_str[gender]+'_days.tsv', 'wb') as csvfile:
     spamwriter = csv.writer(csvfile, delimiter='\t',quotechar='|', quoting=csv.QUOTE_MINIMAL)
-    spamwriter.writerow(["time","frequency"])
+    spamwriter.writerow(["time","frequency","count"])
     sorted_keys = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     for k in sorted_keys:
-      spamwriter.writerow([k, date_appearances[k]/float(n_peepz)])
+      spamwriter.writerow([k, date_appearances[k]/float(n_peepz), time_appearances[k]])
 
 
 
