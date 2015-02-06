@@ -8,6 +8,13 @@ from optparse import OptionParser
 from nltk.collocations import *
 from nltk.corpus import stopwords
 
+# TODO:
+# * casey's bi/tri scorers do a better job than the naive "remove stop
+# words make n-grams". return those when num_grams = {2, 3}.
+# * can we generalize? maybe w/ nltk.metrics.association.NgramAssocMeasures ??
+# * make clouds unique to cities by removing high freq ones in the general
+# dataset
+
 def read_from_db(db_name, num_grams=3, maxrecords=40):
   conn = sqlite3.connect(db_name)
   cursor = conn.cursor()
@@ -33,6 +40,8 @@ def read_from_db(db_name, num_grams=3, maxrecords=40):
   ignored_words = stopwords.words('english')
   word_filter = lambda w: len(w) < 3 or w in ignored_words
 
+  tokens_nostop = [tkn for tkn in tokens if not (len(tkn) < 3 or tkn in ignored_words)]
+
   pp = pprint.PrettyPrinter(indent=4)
 
   cf_bi = nltk.BigramCollocationFinder.from_words(tokens)
@@ -53,7 +62,7 @@ def read_from_db(db_name, num_grams=3, maxrecords=40):
   pp.pprint(best_list)
   print('\n')
 
-  bgs = nltk.ngrams(tokens,num_grams)
+  bgs = nltk.ngrams(tokens_nostop,num_grams)
   fdist = nltk.FreqDist(bgs)
 
   print('Top ' + str(num_grams) + '-grams by frequency:')
