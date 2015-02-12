@@ -45,8 +45,10 @@ def read_from_db(db_name, num_grams=3, maxrecords=40, source_city='atlanta'):
 
   tokens_nostop = [tkn for tkn in tokens if not (len(tkn) < 3 or tkn in ignored_words)]
 
+  min_freq = 3;
+
   cf_bi = nltk.BigramCollocationFinder.from_words(tokens)
-  cf_bi.apply_freq_filter(3)
+  cf_bi.apply_freq_filter(min_freq)
   cf_bi.apply_word_filter(word_filter)
   bi_scorer = nltk.BigramAssocMeasures.likelihood_ratio
   print('Top bi-grams by likelihood, excluding stop-words:')
@@ -55,7 +57,7 @@ def read_from_db(db_name, num_grams=3, maxrecords=40, source_city='atlanta'):
   print('\n')
 
   cf_tri = nltk.TrigramCollocationFinder.from_words(tokens)
-  cf_tri.apply_freq_filter(3)
+  cf_tri.apply_freq_filter(min_freq)
   cf_tri.apply_word_filter(word_filter)
   tri_scorer = nltk.TrigramAssocMeasures.likelihood_ratio
   print('Top tri-grams by likelihood, excluding stop-words:')

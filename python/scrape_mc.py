@@ -17,7 +17,7 @@ from urlparse import urljoin
 do_extract_pics = 0
 
 #viable classes
-mc_classes = set(['w4m', 'm4m', 'm4w', 'w4w', 't4m', 'm4t', 't4w', 'w4t', 't4t', 'mw4mw', 'mw4w', 'mw4m', 'w4mw', 'm4mw', 'w4ww', 'm4mm', 'mm4m', 'ww4w', 'ww4m', 'mm4w', 'm4ww', 'w4mm', 't4mw', 'mw4t'])
+mc_classes = common.valid_classes()
 
 def scrape_mc(cities, db_name, num_pages=1, do_extract_pics=0):
   # Automate a loop later

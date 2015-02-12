@@ -9,6 +9,8 @@ from scipy.misc import imread
 import textstats
 import common
 
+#EX: python cloud.py -m ../db/phalice/big_dick.png -c chicago"
+
 def main():
   """main function for standalone usage"""
   usage = "usage: %prog [options]"
