@@ -134,7 +134,7 @@ def write_chunk_to_db(data, db_name):
     cursor.execute("""SELECT subject FROM missed_connections WHERE url = \'%s\' LIMIT 1""" % row["url"])
     if cursor.fetchone() != None:
       print "---Results already in DB, terminating."
-      break; 
+      continue; 
     cursor.execute("INSERT INTO missed_connections VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (row["datetime"], row["raw_subject"], row["subject"], row["body"], row["url"], row["mc_class"], row["location"], str(row["age"]), row["gender"], row["city"]))
     conn.commit()
   conn.close()
