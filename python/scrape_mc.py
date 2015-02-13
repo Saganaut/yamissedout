@@ -49,7 +49,9 @@ def scrape_mc(cities, db_name, num_pages=1, do_extract_pics=0):
             extract_pics(url)
       # break
       print "---Writing Page " + str(i) + " to Db"
-      write_chunk_to_db(mc_data, db_name)
+      fuckin_keep_goin = write_chunk_to_db(mc_data, db_name)
+      if not fuckin_keep_goin:
+        break;
 
 def extract_pics(url, pdir='pics/'):
   response = requests.get(url)
@@ -133,14 +135,23 @@ def write_database(db_name):
 def write_chunk_to_db(data, db_name):
   conn = sqlite3.connect(db_name)
   cursor = conn.cursor()
+  misst = 0
   for row in data:
     cursor.execute("""SELECT subject FROM missed_connections WHERE url = \'%s\' LIMIT 1""" % row["url"])
     if cursor.fetchone() != None:
       print "---Results already in DB, terminating."
-      continue; 
+      misst += 1
+      if misst >= 5:
+        break;
+      continue;
+    else:
+        misst = 0; 
     cursor.execute("INSERT INTO missed_connections VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (row["datetime"], row["raw_subject"], row["subject"], row["body"], row["url"], row["mc_class"], row["location"], str(row["age"]), row["gender"], row["city"]))
     conn.commit()
   conn.close()
+  if misst >= 5:
+    return False
+  return True
 
 def main():
   """main function for standalone usage"""
