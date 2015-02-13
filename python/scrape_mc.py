@@ -31,6 +31,9 @@ def scrape_mc(cities, db_name, num_pages=1, do_extract_pics=0):
       response = requests.get(BASE_URL + offset)
       soup = BeautifulSoup(response.content)
       missed_connections = soup.find_all('span', {'class':'pl'})
+      if not missed_connections:
+        sys.stderr.write('banned from craigslist :(\n')
+        sys.exit(-2)
       c = 0
       for missed_connection in missed_connections:
         sys.stdout.write("--Progress: %d%%   \r" % (c) )
