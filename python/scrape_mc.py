@@ -3,6 +3,8 @@ import os.path
 import sys
 import urllib
 from optparse import OptionParser
+import random
+import time
 
 import requests
 
@@ -52,6 +54,7 @@ def scrape_mc(cities, db_name, num_pages=1, do_extract_pics=0):
       fuckin_keep_goin = write_chunk_to_db(mc_data, db_name)
       if not fuckin_keep_goin:
         break;
+    time.sleep(random.randint(0, 5))
 
 def extract_pics(url, pdir='pics/'):
   response = requests.get(url)
