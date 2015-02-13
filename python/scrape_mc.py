@@ -158,18 +158,17 @@ def main():
     parser.print_help()
     return 2
 
-  for city in options.cities.split(', '):
-    city = city.strip()
-    if city not in common.valid_cities() :
-      print "City " + city + " is not valid. Choose from:" 
-      print '\n'.join(common.valid_cities())
-      return 2
-
   if options.cities.lower() == 'all':
     cities = common.valid_cities()
-
   else:
-    cities = options.cities.split(',')
+    for city in options.cities.split(', '):
+      city = city.strip()
+      if city not in common.valid_cities() :
+        print "City " + city + " is not valid. Choose from:" 
+        print '\n'.join(common.valid_cities())
+        return 2
+      else:
+        cities = options.cities.split(',')
 
   # do stuff
 
