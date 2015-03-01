@@ -51,7 +51,33 @@ body {
 }
 </style>
 <body>
-<select id="select-city">
+Select the cities: <select id="select-city">
+  <option value="all">Total</option>
+  <option value="atlanta">Atlanta</option>
+  <option value="austin">Austin</option>
+  <option value="boston">Boston</option>
+  <option value="chicago">Windy Shitty (Chicago)</option>
+  <option value="dallas">Dallas</option>
+  <option value="denver">Denver</option>
+  <option value="detroit">Detroit</option>
+  <option value="houston">Houston</option>
+  <option value="lasvegas">Las Vegas</option>
+  <option value="losangeles">Los Angeles</option>
+  <option value="miami">Miasma</option>
+  <option value="minneapolis">Minneapolis</option>
+  <option value="newyork">New York</option>
+  <option value="orangecounty">Orange County</option>
+  <option value="philadelphia">Philadelphia</option>
+  <option value="phoenix">Phoenix</option>
+  <option value="portland">Portland</option>
+  <option value="raleigh">Raleigh</option>
+  <option value="sacramento">Sacramento</option>
+  <option value="sandiego">Sand Diego</option>
+  <option value="seattle">Seattle</option>
+  <option value="sfbay">Man Bay (Bay Area)</option>
+  <option value="washingtondc"> Washington DC </options>
+</select>
+<select id="select-city1">
   <option value="all">Total</option>
   <option value="atlanta">Atlanta</option>
   <option value="austin">Austin</option>
@@ -82,7 +108,12 @@ body {
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
 <script>
+
 $("#select-city").change(city_dropdown);
+$("#select-city1").change(city_dropdown);
+
+var city1 = "all", city2 = "all";
+
 var margin = {top: 40, right: 20, bottom: 30, left: 40},
     width = 560 - margin.left - margin.right,
     height = 300 - margin.top - margin.bottom;
@@ -113,24 +144,30 @@ var tip = d3.tip()
 
 
 function city_dropdown() {
-  var city = $(this).val();
-  $('div#poopchute').empty();
-  if (city === 'all') {
-    city = ""
+  if ($(this)[0].id === 'select-city') {
+    if ($(this).val() === 'all') {
+      city1 = ""
+    } else {
+      city1 = $(this).val()+"_";
+    }
   } else {
-    city += "_"
+    if ($(this).val() === 'all') {
+      city2 = ""
+    } else {
+      city2 = $(this).val()+"_";
+    }
   }
-  console.log(city)
-  barchart("web_data/"+city+"male_time.tsv", "Time of Day", "#CFD369");
-  barchart("web_data/"+city+"male_days.tsv", "Day of the Week", "#CFD369");
-  barchart("web_data/"+city+"female_time.tsv", "Time of Day", "#C36279");
-  barchart("web_data/"+city+"female_days.tsv", "Day of the Week", "#C36279");
-  barchart("web_data/"+city+"trans_time.tsv", "Time of Day", "#447884");
-  barchart("web_data/"+city+"trans_days.tsv", "Day of the Week", "#447884");
+  $('div#poopchute').empty();
+  barchart("web_data/"+city1+"male_time.tsv", "web_data/"+city2+"male_time.tsv", "Time of Day", "#CFD369");
+  barchart("web_data/"+city1+"male_days.tsv","web_data/"+city2+"male_days.tsv", "Day of the Week", "#CFD369");
+  barchart("web_data/"+city1+"female_time.tsv","web_data/"+city2+"female_time.tsv", "Time of Day", "#C36279");
+  barchart("web_data/"+city1+"female_days.tsv","web_data/"+city2+"female_days.tsv", "Day of the Week", "#C36279");
+  barchart("web_data/"+city1+"trans_time.tsv","web_data/"+city2+"trans_time.tsv", "Time of Day", "#447884");
+  barchart("web_data/"+city1+"trans_days.tsv","web_data/"+city2+"trans_days.tsv", "Day of the Week", "#447884");
 }
 
 
-function barchart(filename, xlabel, color){
+function barchart(filename1, filename2, xlabel, color){
   var svg = d3.select("div#poopchute").append("svg")
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom)
@@ -138,43 +175,119 @@ function barchart(filename, xlabel, color){
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
   svg.call(tip);
+  
+  d3.csv("web_data/data.csv", function(error, data) {  
+    console.log(data);
+  });
 
-  d3.tsv(filename, type, function(error, data) {
-    x.domain(data.map(function(d) { return d.time; }));
-    y.domain([0, d3.max(data, function(d) { return d.frequency; })]);
+  both_data = []
+  d3.tsv(filename1, type, function(error, data) {
+    d3.tsv(filename2, type, function(error1, data1) {
+      
+      // both_data.push(data)
+      // both_data.push(data1)
+      console.log(both_data)
+      // x.domain(both_data.map(function(d) { return d.time; }));
+      // y.domain([0, d3.max(both_data, function(d) { return d.frequency; })]);
+
+  // d3.csv("data.csv", function(error, data) {
+    var ageNames = [atlanta, boston]
+
+    data.forEach(function(d) {
+      d.ages = ageNames.map(function(name) { return {name: name, value: +d[name]}; });
+    });
+
+    // x0.domain(data.map(function(d) { return d.State; }));
+    // x1.domain(ageNames).rangeRoundBands([0, x0.rangeBand()]);
+    x0.domain([city1, city2]);
+    x1.domain([])
+    y.domain([0, d3.max(data, function(d) { return d3.max(d.ages, function(d) { return d.value; }); })]);
 
     svg.append("g")
         .attr("class", "x axis")
         .attr("transform", "translate(0," + height + ")")
-        .call(xAxis)
-        .append("text")
-        .attr("y", 28)
-        .attr("x", width/2)
-        .text(xlabel);
+        .call(xAxis);
 
     svg.append("g")
         .attr("class", "y axis")
         .call(yAxis)
       .append("text")
         .attr("transform", "rotate(-90)")
-        .attr("y", -40)
-        .attr("x", -height/2+15)
+        .attr("y", 6)
         .attr("dy", ".71em")
         .style("text-anchor", "end")
-        .text("# Missed Connections");
+        .text("Population");
 
-    svg.selectAll(".bar")
+    var state = svg.selectAll(".state")
         .data(data)
-      .enter().append("rect")
-        .attr("class", "bar")
-        .attr("fill", color)
-        .attr("x", function(d) { return x(d.time); })
-        .attr("width", x.rangeBand())
-        .attr("y", function(d) { return y(d.frequency); })
-        .attr("height", function(d) { return height - y(d.frequency); })
-        .on('mouseover', tip.show)
-        .on('mouseout', tip.hide)
+      .enter().append("g")
+        .attr("class", "g")
+        .attr("transform", function(d) { return "translate(" + x0(d.State) + ",0)"; });
 
+    state.selectAll("rect")
+        .data(function(d) { return d.ages; })
+      .enter().append("rect")
+        .attr("width", x1.rangeBand())
+        .attr("x", function(d) { return x1(d.name); })
+        .attr("y", function(d) { return y(d.value); })
+        .attr("height", function(d) { return height - y(d.value); })
+        .style("fill", function(d) { return color(d.name); })
+        .on('mouseover', tip.show)
+        .on('mouseout', tip.hide);
+
+    var legend = svg.selectAll(".legend")
+        .data(ageNames.slice().reverse())
+      .enter().append("g")
+        .attr("class", "legend")
+        .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+    legend.append("rect")
+        .attr("x", width - 18)
+        .attr("width", 18)
+        .attr("height", 18)
+        .style("fill", color);
+
+    legend.append("text")
+        .attr("x", width - 24)
+        .attr("y", 9)
+        .attr("dy", ".35em")
+        .style("text-anchor", "end")
+        .text(function(d) { return d; });
+
+
+      // svg.append("g")
+      //     .attr("class", "x axis")
+      //     .attr("transform", "translate(0," + height + ")")
+      //     .call(xAxis)
+      //     .append("text")
+      //     .attr("y", 28)
+      //     .attr("x", width/2)
+      //     .text(xlabel);
+
+      // svg.append("g")
+      //     .attr("class", "y axis")
+      //     .call(yAxis)
+      //   .append("text")
+      //     .attr("transform", "rotate(-90)")
+      //     .attr("y", -40)
+      //     .attr("x", -height/2+15)
+      //     .attr("dy", ".71em")
+      //     .style("text-anchor", "end")
+      //     .text("# Missed Connections");
+
+      // svg.selectAll(".bar")
+      //     .data(data)
+      //   .enter().append("rect")
+      //     .attr("class", "bar")
+      //     .attr("fill", color)
+      //     .attr("x", function(d) { return x(d.time); })
+      //     .attr("width", x.rangeBand())
+      //     .attr("y", function(d) { return y(d.frequency); })
+      //     .attr("height", function(d) { return height - y(d.frequency); })
+      //     .on('mouseover', tip.show)
+      //     .on('mouseout', tip.hide)
+
+    });
   });
 }
 
