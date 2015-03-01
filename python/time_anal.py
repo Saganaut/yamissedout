@@ -34,13 +34,13 @@ def time_analysis(db_name, gender='m', city=None):
     date_appearances[date]+=1
 
   if city == None:
-    city = ""
+    city = "all_"
   else:
     city+="_"
   with open('../web/web_data/'+city+gender_str[gender]+'_time.tsv', 'wb') as csvfile:
     spamwriter = csv.writer(csvfile, delimiter='\t',quotechar='|', quoting=csv.QUOTE_MINIMAL)
     if n_peepz == 0:
-      spamwriter.writerow(["[]"])
+      spamwriter.writerow(["None"])
     else:
       spamwriter.writerow(["time","frequency","count"])
       sorted_keys = sorted(time_appearances.keys())
@@ -50,7 +50,7 @@ def time_analysis(db_name, gender='m', city=None):
   with open('../web/web_data/'+city+gender_str[gender]+'_days.tsv', 'wb') as csvfile:
     spamwriter = csv.writer(csvfile, delimiter='\t',quotechar='|', quoting=csv.QUOTE_MINIMAL)
     if n_peepz == 0:
-      spamwriter.writerow(["[]"])
+      spamwriter.writerow(["None"])
     else:
       spamwriter.writerow(["time","frequency","count"])
       sorted_keys = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]

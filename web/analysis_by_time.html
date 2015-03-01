@@ -120,14 +120,16 @@ var margin = {top: 40, right: 20, bottom: 30, left: 40},
 
 var formatPercent = d3.format(".0%");
 
-var x = d3.scale.ordinal()
-    .rangeRoundBands([0, width], .1);
+var x0 = d3.scale.ordinal()
+    .rangeRoundBands([0, width], .3);
+
+var x1 = d3.scale.ordinal();
 
 var y = d3.scale.linear()
     .range([height, 0]);
 
 var xAxis = d3.svg.axis()
-    .scale(x)
+    .scale(x0)
     .orient("bottom");
 
 var yAxis = d3.svg.axis()
@@ -142,32 +144,24 @@ var tip = d3.tip()
     return "<strong>Frequency:</strong> <span style='color:red'>" + (d.frequency*100).toFixed(2) + "%</span>"+"<br/><strong>Count:</strong> <span style='color:orange'>" + d.count + "</span>";
   })
 
-
 function city_dropdown() {
   if ($(this)[0].id === 'select-city') {
-    if ($(this).val() === 'all') {
-      city1 = ""
-    } else {
-      city1 = $(this).val()+"_";
-    }
+      city1 = $(this).val();
   } else {
-    if ($(this).val() === 'all') {
-      city2 = ""
-    } else {
-      city2 = $(this).val()+"_";
-    }
+      city2 = $(this).val();
   }
   $('div#poopchute').empty();
-  barchart("web_data/"+city1+"male_time.tsv", "web_data/"+city2+"male_time.tsv", "Time of Day", "#CFD369");
-  barchart("web_data/"+city1+"male_days.tsv","web_data/"+city2+"male_days.tsv", "Day of the Week", "#CFD369");
-  barchart("web_data/"+city1+"female_time.tsv","web_data/"+city2+"female_time.tsv", "Time of Day", "#C36279");
-  barchart("web_data/"+city1+"female_days.tsv","web_data/"+city2+"female_days.tsv", "Day of the Week", "#C36279");
-  barchart("web_data/"+city1+"trans_time.tsv","web_data/"+city2+"trans_time.tsv", "Time of Day", "#447884");
-  barchart("web_data/"+city1+"trans_days.tsv","web_data/"+city2+"trans_days.tsv", "Day of the Week", "#447884");
+  barchart("web_data/"+city1+"_male_time.tsv", "web_data/"+city2+"_male_time.tsv", "Time of Day", "male");
+  barchart("web_data/"+city1+"_male_days.tsv","web_data/"+city2+"_male_days.tsv", "Day of the Week", "male");
+  barchart("web_data/"+city1+"_female_time.tsv","web_data/"+city2+"_female_time.tsv", "Time of Day", "female");
+  barchart("web_data/"+city1+"_female_days.tsv","web_data/"+city2+"_female_days.tsv", "Day of the Week", "female");
+  barchart("web_data/"+city1+"_trans_time.tsv","web_data/"+city2+"_trans_time.tsv", "Time of Day", "trans");
+  barchart("web_data/"+city1+"_trans_days.tsv","web_data/"+city2+"_trans_days.tsv", "Day of the Week", "trans");
 }
 
 
-function barchart(filename1, filename2, xlabel, color){
+function barchart(filename1, filename2, xlabel, type){
+  var color_scale = d3.scale.ordinal().range(["#8aa236", "#7a296a", "#27576b", "#AA7539"]);
   var svg = d3.select("div#poopchute").append("svg")
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom)
@@ -175,125 +169,99 @@ function barchart(filename1, filename2, xlabel, color){
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
   svg.call(tip);
-  
-  d3.csv("web_data/data.csv", function(error, data) {  
-    console.log(data);
-  });
+  var both_data = [];
+  var max_count = 0;
+  var max_freq = 0.0;
+  d3.tsv(filename1, function(error, data) {
+    d3.tsv(filename2, function(error1, data1) {
+    if (data.length === 0 && data1.length === 0){
+       svg.append("g")
+          .attr("class", "x axis")
+          .attr("transform", "translate(0," + height + ")")
+          .call(xAxis);
+    } else {
+      for (var i = 0; i < data.length; i++){
+          temp_dict = {}
+          temp_dict[city1] = {'count':data[i].count, 'frequency':data[i].frequency} 
+          max_count = Math.max(data[i].count, max_count)
+          max_freq = Math.max(data[i].frequency, max_freq)
+          temp_dict[city2] = {'count':data1[i].count, 'frequency':data1[i].frequency} 
+          max_count = Math.max(data1[i].count, max_count)
+          max_freq = Math.max(data1[i].frequency, max_freq)
+          temp_dict['time'] = data[i].time
+          both_data.push(temp_dict)
+      }      
+      var time_names = both_data.map(function(dat){ return dat.time})
+      var city_names = [city1, city2]
+      both_data.forEach(function(d) {
+        d.counts = city_names.map(function(name) { return {name: name, frequency: +d[name].frequency, count:+d[name].count, color:color_scale(name)}; });
+      });
+      // console.log(both_data)
+      // x0.domain(data.map(function(d) { return d.timez; }));
+      // x1.domain(time_names).rangeRoundBands([0, x0.rangeBand()]);
+      x0.domain(time_names);
+      x1.domain(city_names).rangeRoundBands([0, x0.rangeBand()]);;
+      y.domain([0, max_freq]);
 
-  both_data = []
-  d3.tsv(filename1, type, function(error, data) {
-    d3.tsv(filename2, type, function(error1, data1) {
-      
-      // both_data.push(data)
-      // both_data.push(data1)
-      console.log(both_data)
-      // x.domain(both_data.map(function(d) { return d.time; }));
-      // y.domain([0, d3.max(both_data, function(d) { return d.frequency; })]);
+      svg.append("g")
+          .attr("class", "x axis")
+          .attr("transform", "translate(0," + height + ")")
+          .call(xAxis)
+          .append('text')
+          .attr("x", width/2-15)
+          .attr("y", 28)
+          .text(xlabel);
 
-  // d3.csv("data.csv", function(error, data) {
-    var ageNames = [atlanta, boston]
+      svg.append("g")
+          .attr("class", "y axis")
+          .call(yAxis)
+        .append("text")
+          .attr("transform", "rotate(-90)")
+          .attr("y", 6)
+          .attr("dy", ".71em")
+          .style("text-anchor", "end")
+          .text("Frequency");
 
-    data.forEach(function(d) {
-      d.ages = ageNames.map(function(name) { return {name: name, value: +d[name]}; });
-    });
+      var timez = svg.selectAll(".timez")
+          .data(both_data)
+        .enter().append("g")
+          .attr("class", "g")
+          .attr("transform", function(d) { return "translate(" + x0(d.time) + ",0)"; });
 
-    // x0.domain(data.map(function(d) { return d.State; }));
-    // x1.domain(ageNames).rangeRoundBands([0, x0.rangeBand()]);
-    x0.domain([city1, city2]);
-    x1.domain([])
-    y.domain([0, d3.max(data, function(d) { return d3.max(d.ages, function(d) { return d.value; }); })]);
-
-    svg.append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(0," + height + ")")
-        .call(xAxis);
-
-    svg.append("g")
-        .attr("class", "y axis")
-        .call(yAxis)
-      .append("text")
-        .attr("transform", "rotate(-90)")
-        .attr("y", 6)
-        .attr("dy", ".71em")
-        .style("text-anchor", "end")
-        .text("Population");
-
-    var state = svg.selectAll(".state")
-        .data(data)
-      .enter().append("g")
-        .attr("class", "g")
-        .attr("transform", function(d) { return "translate(" + x0(d.State) + ",0)"; });
-
-    state.selectAll("rect")
-        .data(function(d) { return d.ages; })
-      .enter().append("rect")
-        .attr("width", x1.rangeBand())
-        .attr("x", function(d) { return x1(d.name); })
-        .attr("y", function(d) { return y(d.value); })
-        .attr("height", function(d) { return height - y(d.value); })
-        .style("fill", function(d) { return color(d.name); })
-        .on('mouseover', tip.show)
-        .on('mouseout', tip.hide);
-
-    var legend = svg.selectAll(".legend")
-        .data(ageNames.slice().reverse())
-      .enter().append("g")
-        .attr("class", "legend")
-        .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
-
-    legend.append("rect")
-        .attr("x", width - 18)
-        .attr("width", 18)
-        .attr("height", 18)
-        .style("fill", color);
-
-    legend.append("text")
-        .attr("x", width - 24)
-        .attr("y", 9)
-        .attr("dy", ".35em")
-        .style("text-anchor", "end")
-        .text(function(d) { return d; });
+      timez.selectAll(".bar")
+          .data(function(d) { return d.counts; })
+        .enter().append("rect")
+          .attr("class", "bar")
+          .attr("width", x1.rangeBand())
+          .attr("x", function(d) { return x1(d.name); })
+          .attr("y", function(d) { return y(d.frequency); })
+          .attr("height", function(d) { return height - y(d.frequency); })
+          .style("fill", function(d) {return color_scale(d.name); })
+          .on('mouseover', tip.show)
+          .on('mouseout', tip.hide);
 
 
-      // svg.append("g")
-      //     .attr("class", "x axis")
-      //     .attr("transform", "translate(0," + height + ")")
-      //     .call(xAxis)
-      //     .append("text")
-      //     .attr("y", 28)
-      //     .attr("x", width/2)
-      //     .text(xlabel);
+      var legend = svg.selectAll(".legend")
+          .data(city_names.slice().reverse())
+        .enter().append("g")
+          .attr("class", "legend")
+          .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
 
-      // svg.append("g")
-      //     .attr("class", "y axis")
-      //     .call(yAxis)
-      //   .append("text")
-      //     .attr("transform", "rotate(-90)")
-      //     .attr("y", -40)
-      //     .attr("x", -height/2+15)
-      //     .attr("dy", ".71em")
-      //     .style("text-anchor", "end")
-      //     .text("# Missed Connections");
+      legend.append("rect")
+          .attr("x", width - 18)
+          .attr("width", 18)
+          .attr("height", 18)
+          .style("fill", color_scale);
 
-      // svg.selectAll(".bar")
-      //     .data(data)
-      //   .enter().append("rect")
-      //     .attr("class", "bar")
-      //     .attr("fill", color)
-      //     .attr("x", function(d) { return x(d.time); })
-      //     .attr("width", x.rangeBand())
-      //     .attr("y", function(d) { return y(d.frequency); })
-      //     .attr("height", function(d) { return height - y(d.frequency); })
-      //     .on('mouseover', tip.show)
-      //     .on('mouseout', tip.hide)
-
+      legend.append("text")
+          .attr("x", width - 24)
+          .attr("y", 9)
+          .attr("dy", ".35em")
+          .style("text-anchor", "end")
+          .text(function(d) { return d; });
+      }
     });
   });
-}
-
-function type(d) {
-  d.frequency = +d.frequency;
-  return d;
 }
 
 
