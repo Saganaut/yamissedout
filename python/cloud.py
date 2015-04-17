@@ -13,7 +13,7 @@ import common
 
 def main():
   """main function for standalone usage"""
-  usage = "usage: %prog [options]"
+  usage = "usage: %prog [options] output.png"
   parser = OptionParser(usage=usage)
   parser.add_option('-d', '--db', default='../db/missed_connections.db',
                     help='DB file [default: %default]')
@@ -29,7 +29,7 @@ def main():
 
   (options, args) = parser.parse_args()
 
-  if len(args) != 0 :
+  if len(args) != 1:
     parser.print_help()
     return 2
 
@@ -46,11 +46,11 @@ def main():
 
   if options.mask:
     dickmask = imread(options.mask)
-    wordcloud = WordCloud(font_path=options.font, background_color='white', mask=dickmask)
+    wordcloud = WordCloud(background_color='white', mask=dickmask)
   else:
-    wordcloud = WordCloud(font_path=options.font)
+    wordcloud = WordCloud()
   wordcloud.fit_words(words)
-  wordcloud.to_file('shitdick.png')
+  wordcloud.to_file(args[0])
 
 if __name__ == '__main__':
     sys.exit(main())
