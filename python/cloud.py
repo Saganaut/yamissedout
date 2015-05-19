@@ -33,15 +33,23 @@ def main():
     parser.print_help()
     return 2
 
-  if options.city not in common.valid_cities() :
+  if options.city not in common.valid_cities() and options.city != 'all':
     print "City " + options.city + " is not valid. Choose from:" 
     print '\n'.join(common.valid_cities())
     return 2
 
-  results = textstats.read_from_db(options.db,
-                                   num_grams=options.ngram,
-                                   maxrecords=options.num_records,
-                                   source_city=options.city)
+  if options.city == 'all':
+    results = []
+    for city in common.valid_cities():
+      results.extend(textstats.read_from_db(options.db,
+                                            num_grams=options.ngram,
+                                            maxrecords=options.num_records,
+                                            source_city=city))
+  else:
+    results = textstats.read_from_db(options.db,
+                                     num_grams=options.ngram,
+                                     maxrecords=options.num_records,
+                                     source_city=options.city)
   words = [(' '.join(tokens), count) for (tokens, count) in results]
 
   if options.mask:
