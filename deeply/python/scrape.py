@@ -51,7 +51,7 @@ def dumpvidandlabels(url, cookie, videodir='videos'):
         for timetag in tag_element.findAll('li', class_='time-tag'):
             start = timetag.attrs['data-start-time']
             end = timetag.attrs['data-end-time']
-            print(','.join([videopath, tag, start, end]))
+            print(','.join([videopath, url, tag, start, end]))
 
     sys.stderr.write('Downloading %s to %s...\n' % (videourl, videopath))
     downloadfile(videourl, videopath, cookie)
