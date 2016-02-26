@@ -42,6 +42,15 @@ def dumpvidandlabels(url, cookie, videodir='videos'):
 
     soup = BeautifulSoup(r.text, 'html.parser')
 
+    try:
+        if soup.title.text == 'Brazzers Members Area  Worlds Best HD Pornsite':
+            sys.stderr.write('Cookie has expired! Relogin on Chrome\n')
+            sys.exit(1)
+    except AttributeError:
+        sys.stderr.write('Error loading page!\n')
+        sys.stderr.write(r.text)
+        sys.exit(1)
+
     videourl = 'http://ma.brazzers.com' + soup.findAll('a', target='_blank', class_='clearfix download-full')[-1].attrs['href']
     videopath = os.path.join(videodir, _videoname(url))
 
