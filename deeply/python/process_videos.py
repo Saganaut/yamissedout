@@ -9,11 +9,13 @@ FFMPEG_BIN = 'avconv'
 
 def read_csv_file(filename):
   naughty_dict = dd(list)
+  videos = set()
   with open(filename, 'rb') as csvfile:
     csr_reader = csv.reader(csvfile, delimiter=',')
     for row in csr_reader:       #path, start, stop
       naughty_dict[row[2].replace(' ','_').replace("'", '')].append((row[0], int(row[3]), int(row[4])))
-  return naughty_dict
+      videos.add(row[0])
+  return naughty_dict, videos
 
 def open_video(filename):
   command = [ FFMPEG_BIN,  
@@ -26,8 +28,26 @@ def s_to_ffmpeg_ss(seconds):
   h, m = divmod(m, 60)
   return str(h)+':'+str(m)+':'+str(s)
 
+def resize_video_strip_sound(filename, output_file, height, width):
+  command = [ FFMPEG_BIN, 
+              'i', filename,
+              's', str(height)+'x'+str(width),
+              '-an -c:v copy',  output_file
+            ]
+  sp.call(command)
+
+def resize_all_videos(videos, output_file_path, height, width):
+  for vid in videos:
+    # TODO need to strip path, create output version
+    print vid
+
+    resize_video_strip_sound(vid, '', height, width)
+
 if __name__ == '__main__':
-  naughty_dict = read_csv_file('../data/label.csv')
+  
+  naughty_dict, videos = read_csv_file('../data/label.csv')
+  resize_all_videos(videos, '../data/videos/small/', 200, 150)
+  
   # barf out a dir structure 4 gr8 nast
   if not os.path.exists('../data/video_frames/'):
     os.mkdir('../data/video_frames')
