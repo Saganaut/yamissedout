@@ -35,6 +35,8 @@ def main():
     """main function for standalone usage"""
     usage = "usage: %prog [options] csv"
     parser = OptionParser(usage=usage)
+    parser.add_option('-c', '--categories', default=['Blowjob', 'Deep_Throat', 'Facial'],
+                      action='append')
 
     (options, args) = parser.parse_args()
 
@@ -43,7 +45,7 @@ def main():
         return 2
 
     # do stuff
-    make_mfcc_features(read_csv_file(args[0]))
+    make_mfcc_features(read_csv_file(args[0]), categories=options.categories)
 
 if __name__ == '__main__':
     sys.exit(main())
