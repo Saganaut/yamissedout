@@ -2,10 +2,16 @@ argparse==1.2.1
 beautifulsoup4==4.4.1
 keyring==8.4.1
 numpy==1.10.4
+pandas==0.17.1
 pycookiecheat==0.2.0
 pycrypto==2.6.1
+python-dateutil==2.5.0
+pytz==2015.7
 requests==2.9.1
+scikit-learn==0.17.1
 scipy==0.17.0
+six==1.10.0
+sklearn==0.0
 speech-features==0.1
 tqdm==3.8.0
 wsgiref==0.1.2
