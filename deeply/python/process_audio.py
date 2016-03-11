@@ -4,7 +4,6 @@ from optparse import OptionParser
 import subprocess
 
 import scipy.io.wavfile as wav
-from features import mfcc
 from tqdm import tqdm
 import librosa
 
@@ -59,6 +58,11 @@ def audio_features(naughty_dict, categories=['Blowjob', 'Deep_Throat', 'Facial']
             features = []
             for fe in feature_extractors:
                 features.append(fe(y, sr))
+                if fe == librosa.feature.mfcc:
+                    mfcc = features[-1]
+                    features.append(librosa.feature.delta(mfcc)) # 20
+                    features.append(librosa.feature.delta(mfcc, order=2)) # 20
+
             for i in range(features[0].shape[1]):
                 for fv in features:
                     print('%s' % ','.join(map(str, fv[:, i])), end=',')
