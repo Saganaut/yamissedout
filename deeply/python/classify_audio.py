@@ -17,14 +17,19 @@ models = {'svm': svm.SVC(kernel='linear', C=1),
           'rf':  RandomForestClassifier(),
 }
 
+def _feature_names(n):
+    return ['f%d' % x for x in range(n)]
+
 def _read_mfcc_df(csvpath):
-    return pd.read_csv(csvpath,
-                       header=None,
-                       sep=',',
-                       names=['mfcc%d' % x for x in range(13)] + ['class'])
+    with open(csvpath) as f:
+        numfeatures = len(f.readline().strip().split(',')) - 1
+        return pd.read_csv(csvpath,
+                           header=None,
+                           sep=',',
+                           names=_feature_names(numfeatures) + ['class'])
 
 def xfold(df, classifier, k=10):
-    X = df[['mfcc%d' % x for x in range(13)]]
+    X = df[_feature_names(len(df.columns) - 1)]
     normalize(X, copy=False)
     y = df['class']
 
@@ -33,7 +38,7 @@ def xfold(df, classifier, k=10):
     return scores
 
 def _confusion_matrix(df, classifier):
-    X = df[['mfcc%d' % x for x in range(13)]]
+    X = df[_feature_names(len(df.columns) - 1)]
     normalize(X, copy=False)
     y = df['class']
     labels = list(np.unique(y))
