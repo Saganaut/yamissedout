@@ -5,6 +5,7 @@ import subprocess
 import scipy.io.wavfile as wav
 from features import mfcc
 from tqdm import tqdm
+import librosa
 
 from process_videos import s_to_ffmpeg_ss, FFMPEG_BIN, read_csv_file
 
@@ -31,6 +32,17 @@ def make_mfcc_features(naughty_dict, categories=['Blowjob', 'Deep_Throat', 'Faci
             for fv in mfcc_features:
                 print('%s,%s' % (','.join(map(str, fv)), category))
 
+def audio_features(naughty_dict, categories=['Blowjob', 'Deep_Throat', 'Facial']):
+    for category in categories:
+        sys.stderr.write('processing category %s...\n' % category)
+        for clip, start, stop in tqdm(naughty_dict[category]):
+            tmppath = '/tmp/hot.wav'
+            _extract_sound(clip, tmppath, start, stop)
+            y, sr = librosa.load('/tmp/hot.wav')
+            mfcc_features = librosa.feature.mfcc(y, sr)
+            for fv in mfcc_features.T:
+                print('%s,%s' % (','.join(map(str, fv)), category))
+
 def main():
     """main function for standalone usage"""
     usage = "usage: %prog [options] csv"
@@ -45,7 +57,7 @@ def main():
         return 2
 
     # do stuff
-    make_mfcc_features(read_csv_file(args[0]), categories=options.categories)
+    audio_features(read_csv_file(args[0]), categories=options.categories)
 
 if __name__ == '__main__':
     sys.exit(main())
