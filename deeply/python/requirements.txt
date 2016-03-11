@@ -1,7 +1,11 @@
 argparse==1.2.1
 beautifulsoup4==4.4.1
 keyring==8.4.1
+numpy==1.10.4
 pycookiecheat==0.2.0
 pycrypto==2.6.1
 requests==2.9.1
+scipy==0.17.0
+speech-features==0.1
+tqdm==3.8.0
 wsgiref==0.1.2
