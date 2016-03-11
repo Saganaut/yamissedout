@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 from optparse import OptionParser
 import subprocess
@@ -32,6 +33,22 @@ def make_mfcc_features(naughty_dict, categories=['Blowjob', 'Deep_Throat', 'Faci
             for fv in mfcc_features:
                 print('%s,%s' % (','.join(map(str, fv)), category))
 
+# librosa functions that:
+# * take y, sr
+# * return 1895 samples for /tmp/hot.wav
+feature_extractors = [
+    librosa.feature.chroma_stft, # 12
+    librosa.feature.mfcc, # 20
+    librosa.feature.chroma_cqt, # 12
+    librosa.feature.spectral_centroid, # 1
+    librosa.feature.spectral_bandwidth, # 1
+    librosa.feature.spectral_contrast, # 7
+    librosa.feature.spectral_rolloff, # 1
+    librosa.feature.poly_features, # 2
+    librosa.feature.tonnetz, # 6
+    librosa.feature.zero_crossing_rate, # 1
+]
+
 def audio_features(naughty_dict, categories=['Blowjob', 'Deep_Throat', 'Facial']):
     for category in categories:
         sys.stderr.write('processing category %s...\n' % category)
@@ -39,9 +56,13 @@ def audio_features(naughty_dict, categories=['Blowjob', 'Deep_Throat', 'Facial']
             tmppath = '/tmp/hot.wav'
             _extract_sound(clip, tmppath, start, stop)
             y, sr = librosa.load('/tmp/hot.wav')
-            mfcc_features = librosa.feature.mfcc(y, sr)
-            for fv in mfcc_features.T:
-                print('%s,%s' % (','.join(map(str, fv)), category))
+            features = []
+            for fe in feature_extractors:
+                features.append(fe(y, sr))
+            for i in range(features[0].shape[1]):
+                for fv in features:
+                    print('%s' % ','.join(map(str, fv[:, i])), end=',')
+                print(category)
 
 def main():
     """main function for standalone usage"""
