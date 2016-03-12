@@ -6,15 +6,18 @@ from optparse import OptionParser
 import pandas as pd
 import numpy as np
 from sklearn import cross_validation
-from sklearn import svm
-from sklearn.linear_model import SGDClassifier
+from sklearn.svm import SVC
+from sklearn.linear_model import SGDClassifier, LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.preprocessing import normalize
 from sklearn.metrics import confusion_matrix
 
-models = {'svm': svm.SVC(kernel='linear', C=1),
-          'sgd': SGDClassifier(loss="hinge", penalty="l2"),
-          'rf':  RandomForestClassifier(),
+models = {'svm':  SVC(kernel='linear', C=1),
+          'sgd':  SGDClassifier(loss="hinge", penalty="l2"),
+          'rf':   RandomForestClassifier(),
+          'dt':   DecisionTreeClassifier(),
+          'lr':   LogisticRegression(class_weight='balanced'),
 }
 
 def _feature_names(n):
