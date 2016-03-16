@@ -12,6 +12,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.preprocessing import normalize
 from sklearn.metrics import confusion_matrix
+from sklearn.feature_selection import SelectKBest, f_classif
 
 models = {'svm':  SVC(kernel='linear', C=1),
           'sgd':  SGDClassifier(loss="hinge", penalty="l2"),
@@ -31,19 +32,15 @@ def _read_mfcc_df(csvpath):
                            sep=',',
                            names=_feature_names(numfeatures) + ['class'])
 
-def xfold(df, classifier, k=10):
-    X = df[_feature_names(len(df.columns) - 1)]
+def xfold(X, y, classifier, k=10):
     normalize(X, copy=False)
-    y = df['class']
 
     clf = models[classifier]
     scores = cross_validation.cross_val_score(clf, X, y, cv=k)
     return scores
 
-def _confusion_matrix(df, classifier):
-    X = df[_feature_names(len(df.columns) - 1)]
+def _confusion_matrix(X, y, classifier):
     normalize(X, copy=False)
-    y = df['class']
     labels = list(np.unique(y))
 
     clf = models[classifier]
@@ -58,6 +55,9 @@ def main():
     parser = OptionParser(usage=usage)
     parser.add_option('-m', '--model', default='svm',
                       help='Model to use. One of: %s' % ', '.join(models.keys()))
+    parser.add_option('-k', default=10, type='int',
+                      help='Number of CV folds [default: %default]')
+    parser.add_option('-f', '--feature-selection', default=0, type='int')
 
     (options, args) = parser.parse_args()
 
@@ -67,8 +67,15 @@ def main():
 
     # do stuff
     df = _read_mfcc_df(args[0])
-    print(xfold(df, options.model))
-    cmatrix, labels = _confusion_matrix(df, options.model)
+    X, y = df[_feature_names(len(df.columns) - 1)], df['class']
+
+    if options.feature_selection > 0:
+        X = SelectKBest(f_classif, k=options.feature_selection).fit_transform(X, y)
+
+    scores = xfold(X, y, options.model, k=options.k)
+    print(scores)
+    print('average accuracy: %f' % (sum(scores) / float(len(scores))))
+    cmatrix, labels = _confusion_matrix(X, y, options.model)
     print('%s%s' % (' ' * 15, ' '.join(labels)))
     for label, row in zip(labels, cmatrix):
         print('%15s %s' % (label, str(row)))
